@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WebApiClientCore" Version="2.0.4" />
+    <PackageReference Include="WebApiClientCore.Extensions.NewtonsoftJson" Version="2.0.4" />
+  </ItemGroup>
+
+</Project>
