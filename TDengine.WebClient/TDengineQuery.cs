@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using DotNext.Buffers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,21 +31,23 @@ namespace TDengine.WebClient
 
         private string ConvertToJsonString(TDengineResponse tdDengineResponse)
         {
-            StringBuilder sb = new StringBuilder();
+            using var writer = new BufferWriterSlim<char>();
             if (tdDengineResponse.Rows > 1)
-                sb.Append("[");
+                writer.Write("[");
 
             for (int j = 0; j < tdDengineResponse.Data!.Count; j++)
             {
                 object[] row = tdDengineResponse.Data![j];
-                sb.Append("{");
+                writer.Write("{");
                 for (int i = 0; i < tdDengineResponse.ColumnTDengineMeta!.Count; i++)
                 {
                     string jsonName = tdDengineResponse.ColumnTDengineMeta[i].Name!;
                     TDengineDataType tDengineDataType = tdDengineResponse.ColumnTDengineMeta[i].DataType;
                     object targetValue = row[i];
-
-                    sb.Append(@"""").Append(jsonName).Append(@"""").Append(":");
+                    writer.Write(@"""");
+                    writer.Write(jsonName);
+                    writer.Write(@"""");
+                    writer.Write(":");
 
                     switch (tDengineDataType)
                     {
@@ -52,41 +56,45 @@ namespace TDengine.WebClient
                             DateTime.TryParse(targetValue.ToString(), out DateTime utcDateTime);
                             DateTime localTime = utcDateTime.ToLocalTime();
 
-                            sb.Append(@"""").Append(localTime).Append(@"""");
+                            writer.Write(@"""");
+                            writer.Write(localTime.ToString(CultureInfo.InvariantCulture)); 
+                            writer.Write(@"""");
                         }
                             break;
                         case TDengineDataType.Binary:
                         case TDengineDataType.NChart:
                         case TDengineDataType.VarChar:
                         {
-                            sb.Append(@"""").Append(targetValue).Append(@"""");
+                            writer.Write(@"""");
+                            writer.Write(targetValue.ToString()); 
+                            writer.Write(@"""");
                         }
                             break;
                         case TDengineDataType.Bool:
                         {
-                            sb.Append(targetValue.ToString()!.ToLower());
+                            writer.Write(targetValue.ToString()!.ToLower());
                         }
                             break;
                         default:
-                            sb.Append(targetValue);
+                            writer.Write(targetValue.ToString());
                             break;
                     }
 
                     if (i != tdDengineResponse.ColumnTDengineMeta!.Count - 1)
-                        sb.Append(",");
+                        writer.Write(",");
                 }
 
-                sb.Append("}");
+                writer.Write("}");
 
                 if (j != tdDengineResponse.Data!.Count - 1)
-                    sb.Append(",");
+                    writer.Write(",");
             }
 
 
             if (tdDengineResponse.Rows > 1)
-                sb.Append("]");
+                writer.Write("]");
 
-            string jsonString = sb.ToString();
+            string jsonString = writer.ToString();
 
             return jsonString;
         }
