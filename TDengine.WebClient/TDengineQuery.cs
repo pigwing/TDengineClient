@@ -66,17 +66,31 @@ namespace TDengine.WebClient
                         case TDengineDataType.VarChar:
                         {
                             writer.Write(@"""");
-                            writer.Write(targetValue.ToString()); 
+                            writer.Write(targetValue == null ? "" : targetValue.ToString()); 
                             writer.Write(@"""");
                         }
                             break;
                         case TDengineDataType.Bool:
                         {
-                            writer.Write(targetValue.ToString()!.ToLower());
+                            writer.Write(targetValue == null ? "false" : targetValue.ToString()!.ToLower());
+                        }
+                            break;
+                        case TDengineDataType.BigInt:
+                        case TDengineDataType.BigIntUnsigned:
+                        case TDengineDataType.Int:
+                        case TDengineDataType.IntUnsigned:
+                        case TDengineDataType.Float:
+                        case TDengineDataType.Double:
+                        case TDengineDataType.SmallInt:
+                        case TDengineDataType.SmallIntUnsigned:
+                        case TDengineDataType.TinyInt:
+                        case TDengineDataType.TinyIntUnsigned:
+                        {
+                            writer.Write(targetValue == null ? "0" : targetValue.ToString());
                         }
                             break;
                         default:
-                            writer.Write(targetValue.ToString());
+                            writer.Write(targetValue == null ? "null" : targetValue.ToString());
                             break;
                     }
 
