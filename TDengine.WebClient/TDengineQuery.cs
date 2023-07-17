@@ -124,6 +124,17 @@ namespace TDengine.WebClient
             return JsonConvert.DeserializeObject<T>(jsonString);
         }
 
+        public async Task<T?> QueryAsync<T>(string database, string sql) where T : class, new()
+        {
+            TDengineResponse tdDengineResponse =
+                await _tDengineRestApi.ExecuteQueryAsync(database, sql);
+            if (tdDengineResponse.Code != 0)
+                throw new ArgumentException(tdDengineResponse.Description);
+
+            string jsonString = ConvertToJsonString(tdDengineResponse);
+            return JsonConvert.DeserializeObject<T>(jsonString);
+        }
+
         private string SqlGenerator(string rawSql, ICollection<TDengineParameter> parameters)
         {
             string sql = rawSql;
