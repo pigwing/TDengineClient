@@ -51,6 +51,13 @@ namespace TDengineAspCoreClient.Controllers
             return databaseScheme;
         }
 
+        [HttpGet("QueryHistoryDataByHost")]
+        public async Task<List<HistoryData>?> QuerySqlAsync(string host, string database, string sql)
+        {
+            List<HistoryData>? response = await _tDengineQuery.QueryAsync<List<HistoryData>>(host, database, sql);
+            return response;
+        }
+
         [HttpGet("QueryHistoryData")]
         public async Task<List<HistoryData>?> QuerySqlAsync(string sql)
         {
