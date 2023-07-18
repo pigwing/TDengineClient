@@ -4,7 +4,7 @@ using WebApiClientCore.Attributes;
 namespace TDengine.WebClient
 {
 
-    [LoggingFilter]
+    //[LoggingFilter]
     public interface ITDengineRestApi
     {
         [HttpPost("rest/sql/{database}")]
