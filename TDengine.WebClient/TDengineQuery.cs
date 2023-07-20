@@ -34,8 +34,10 @@ namespace TDengine.WebClient
         private ReadOnlySpan<char> ConvertToJsonString(TDengineResponse tdDengineResponse)
         {
             using var writer = new BufferWriterSlim<char>();
+
             if (tdDengineResponse.Rows > 1)
                 writer.Write("[");
+
 
             for (int j = 0; j < tdDengineResponse.Data!.Count; j++)
             {
@@ -106,7 +108,6 @@ namespace TDengine.WebClient
                     writer.Write(",");
             }
 
-
             if (tdDengineResponse.Rows > 1)
                 writer.Write("]");
 
@@ -124,34 +125,35 @@ namespace TDengine.WebClient
             return System.Text.Json.JsonSerializer.Deserialize<T>(jsonString, _jsonSerializerOptions);
         }
 
+        private T? GetResult<T>(TDengineResponse tdDengineResponse, JsonTypeInfo<T>? jsonTypeInfo = null)
+        {
+            if (tdDengineResponse.Code != 0)
+                throw new ArgumentException(tdDengineResponse.Description);
+            return tdDengineResponse.Rows == 0 ? default : GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
+        }
+
         public async Task<T?> QueryAsync<T>(string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(_connectionConfiguration.Database!, sql);
-            if (tdDengineResponse.Code != 0)
-                throw new ArgumentException(tdDengineResponse.Description);
 
-            return GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
+            return GetResult(tdDengineResponse, jsonTypeInfo);
         }
 
         public async Task<T?> QueryAsync<T>(string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(database, sql);
-            if (tdDengineResponse.Code != 0)
-                throw new ArgumentException(tdDengineResponse.Description);
 
-            return GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
+            return GetResult(tdDengineResponse, jsonTypeInfo);
         }
 
         public async Task<T?> QueryAsync<T>(string host, string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(host, database, sql);
-            if (tdDengineResponse.Code != 0)
-                throw new ArgumentException(tdDengineResponse.Description);
 
-            return GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
+            return GetResult(tdDengineResponse, jsonTypeInfo);
         }
 
         private string SqlGenerator(string rawSql, ICollection<TDengineParameter> parameters)
