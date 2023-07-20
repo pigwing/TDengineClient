@@ -61,7 +61,7 @@ namespace TDengineAspCoreClient.Controllers
         [HttpGet("QueryHistoryData")]
         public async Task<List<HistoryData>?> QuerySqlAsync(string sql)
         {
-            List<HistoryData>? response = await _tDengineQuery.QueryAsync<List<HistoryData>>(sql);
+            List<HistoryData>? response = await _tDengineQuery.QueryAsync<List<HistoryData>>(sql, MyJsonContext.Default.ListHistoryData);
             return response;
         }
 

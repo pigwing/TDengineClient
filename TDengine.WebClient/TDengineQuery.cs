@@ -1,12 +1,6 @@
 ﻿using DotNext.Buffers;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace TDengine.WebClient
 {
@@ -16,11 +10,18 @@ namespace TDengine.WebClient
         private readonly ConnectionConfiguration _connectionConfiguration;
 
         private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        private const string DateTimeSystemTextJsonFormat = "yyyy-MM-ddTHH:mm:ss";
+        private readonly System.Text.Json.JsonSerializerOptions _jsonSerializerOptions;
+
 
         public TDengineQuery(ITDengineRestApi tDengineRestApi, ConnectionConfiguration connectionConfiguration)
         {
             _tDengineRestApi = tDengineRestApi;
             _connectionConfiguration = connectionConfiguration;
+            _jsonSerializerOptions = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true,
+            };
         }
 
         public async Task<TDengineResponse> RawQueryAsync(string sql)
@@ -29,7 +30,8 @@ namespace TDengine.WebClient
             return tdDengineResponse;
         }
 
-        private string ConvertToJsonString(TDengineResponse tdDengineResponse)
+
+        private ReadOnlySpan<char> ConvertToJsonString(TDengineResponse tdDengineResponse)
         {
             using var writer = new BufferWriterSlim<char>();
             if (tdDengineResponse.Rows > 1)
@@ -37,7 +39,7 @@ namespace TDengine.WebClient
 
             for (int j = 0; j < tdDengineResponse.Data!.Count; j++)
             {
-                object[] row = tdDengineResponse.Data![j];
+                object[] row = tdDengineResponse.Data[j];
                 writer.Write("{");
                 for (int i = 0; i < tdDengineResponse.ColumnTDengineMeta!.Count; i++)
                 {
@@ -57,7 +59,7 @@ namespace TDengine.WebClient
                             DateTime localTime = utcDateTime.ToLocalTime();
 
                             writer.Write(@"""");
-                            writer.Write(localTime.ToString(CultureInfo.InvariantCulture)); 
+                            writer.Write(localTime.ToString(DateTimeSystemTextJsonFormat)); 
                             writer.Write(@"""");
                         }
                             break;
@@ -108,42 +110,48 @@ namespace TDengine.WebClient
             if (tdDengineResponse.Rows > 1)
                 writer.Write("]");
 
-            string jsonString = writer.ToString();
-
+            var jsonString = writer.WrittenSpan;
+            //Debug.Print(jsonString.ToString());
             return jsonString;
         }
 
-        public async Task<T?> QueryAsync<T>(string sql) where T : class, new()
+        private T? GetObject<T>(ReadOnlySpan<char> jsonString, JsonTypeInfo<T>? jsonTypeInfo = null)
+        {
+            if (jsonTypeInfo != null)
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<T>(jsonString, jsonTypeInfo);
+            }
+            return System.Text.Json.JsonSerializer.Deserialize<T>(jsonString, _jsonSerializerOptions);
+        }
+
+        public async Task<T?> QueryAsync<T>(string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(_connectionConfiguration.Database!, sql);
             if (tdDengineResponse.Code != 0)
                 throw new ArgumentException(tdDengineResponse.Description);
 
-            string jsonString = ConvertToJsonString(tdDengineResponse);
-            return JsonConvert.DeserializeObject<T>(jsonString);
+            return GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
         }
 
-        public async Task<T?> QueryAsync<T>(string database, string sql) where T : class, new()
+        public async Task<T?> QueryAsync<T>(string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(database, sql);
             if (tdDengineResponse.Code != 0)
                 throw new ArgumentException(tdDengineResponse.Description);
 
-            string jsonString = ConvertToJsonString(tdDengineResponse);
-            return JsonConvert.DeserializeObject<T>(jsonString);
+            return GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
         }
 
-        public async Task<T?> QueryAsync<T>(string host, string database, string sql) where T : class, new()
+        public async Task<T?> QueryAsync<T>(string host, string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(host, database, sql);
             if (tdDengineResponse.Code != 0)
                 throw new ArgumentException(tdDengineResponse.Description);
 
-            string jsonString = ConvertToJsonString(tdDengineResponse);
-            return JsonConvert.DeserializeObject<T>(jsonString);
+            return GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
         }
 
         private string SqlGenerator(string rawSql, ICollection<TDengineParameter> parameters)

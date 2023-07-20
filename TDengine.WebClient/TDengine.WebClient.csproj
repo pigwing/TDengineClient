@@ -5,14 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.0.4</Version>
+    <Version>1.0.0.6</Version>
     <PackageProjectUrl>https://github.com/pigwing/TDengineClient</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNext" Version="4.13.0" />
     <PackageReference Include="WebApiClientCore" Version="2.0.4" />
-    <PackageReference Include="WebApiClientCore.Extensions.NewtonsoftJson" Version="2.0.4" />
   </ItemGroup>
 
 </Project>
