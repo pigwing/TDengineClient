@@ -35,7 +35,7 @@ namespace TDengine.WebClient
         {
             using var writer = new BufferWriterSlim<char>();
 
-            if (tdDengineResponse.Rows > 1)
+            if (tdDengineResponse.Rows >= 1)
                 writer.Write("[");
 
 
@@ -108,7 +108,7 @@ namespace TDengine.WebClient
                     writer.Write(",");
             }
 
-            if (tdDengineResponse.Rows > 1)
+            if (tdDengineResponse.Rows >= 1)
                 writer.Write("]");
 
             var jsonString = writer.WrittenSpan;
