@@ -1,4 +1,5 @@
-﻿using DotNext.Buffers;
+﻿using System.Collections;
+using DotNext.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -132,7 +133,7 @@ namespace TDengine.WebClient
             return tdDengineResponse.Rows == 0 ? default : GetObject(ConvertToJsonString(tdDengineResponse), jsonTypeInfo);
         }
 
-        public async Task<T?> QueryAsync<T>(string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
+        public async Task<T?> QueryAsync<T>(string sql, JsonTypeInfo<T>? jsonTypeInfo = null) where T : IEnumerable
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(_connectionConfiguration.Database!, sql);
@@ -140,7 +141,7 @@ namespace TDengine.WebClient
             return GetResult(tdDengineResponse, jsonTypeInfo);
         }
 
-        public async Task<T?> QueryAsync<T>(string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
+        public async Task<T?> QueryAsync<T>(string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null) where T : IEnumerable
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(database, sql);
@@ -148,7 +149,7 @@ namespace TDengine.WebClient
             return GetResult(tdDengineResponse, jsonTypeInfo);
         }
 
-        public async Task<T?> QueryAsync<T>(string host, string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null)
+        public async Task<T?> QueryAsync<T>(string host, string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null) where T : IEnumerable
         {
             TDengineResponse tdDengineResponse =
                 await _tDengineRestApi.ExecuteQueryAsync(host, database, sql);
@@ -231,7 +232,7 @@ namespace TDengine.WebClient
         /// <param name="sql"></param>
         /// <param name="parameters">使用@开始作为占位符</param>
         /// <returns></returns>
-        public async Task<T?> QueryAsync<T>(string sql, ICollection<TDengineParameter> parameters) where T : class, new()
+        public async Task<T?> QueryAsync<T>(string sql, ICollection<TDengineParameter> parameters) where T : IEnumerable
         {
             string sqlRewrite = SqlGenerator(sql, parameters);
             return await QueryAsync<T>(sqlRewrite);

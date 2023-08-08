@@ -44,10 +44,10 @@ namespace TDengineAspCoreClient.Controllers
         }
 
         [HttpGet("DatabaseShceme")]
-        public async Task<DatabaseScheme?> QueryDatabaseSchemeAsync(string databaseName)
+        public async Task<DatabaseScheme[]?> QueryDatabaseSchemeAsync(string databaseName)
         {
             string sql = $@"SELECT * FROM INFORMATION_SCHEMA.INS_DATABASES WHERE NAME='{databaseName}'";
-            DatabaseScheme? databaseScheme = await _tDengineQuery.QueryAsync<DatabaseScheme>(sql);
+            DatabaseScheme[]? databaseScheme = await _tDengineQuery.QueryAsync<DatabaseScheme[]>(sql);
             return databaseScheme;
         }
 
@@ -66,7 +66,7 @@ namespace TDengineAspCoreClient.Controllers
         }
 
         [HttpGet("AddTestData")]
-        public async Task<TDengineExecuteNonQueryResult?> AddTestData(long insertCount, long unitId, string alias)
+        public async Task<TDengineExecuteNonQueryResult[]?> AddTestData(long insertCount, long unitId, string alias)
         {
             DateTime now = DateTime.Now;
             Random random = new Random((int)DateTime.Now.Ticks);
@@ -96,20 +96,20 @@ namespace TDengineAspCoreClient.Controllers
             }
             string sql = sb.ToString();
 
-            TDengineExecuteNonQueryResult? response =  await _tDengineQuery.QueryAsync<TDengineExecuteNonQueryResult>(sql);
+            TDengineExecuteNonQueryResult[]? response =  await _tDengineQuery.QueryAsync<TDengineExecuteNonQueryResult[]>(sql);
 
             return response;
         }
 
         [HttpPost("Update")]
-        public async Task<TDengineExecuteNonQueryResult?> UpdateAsync([FromBody]HistoryData historyData)
+        public async Task<TDengineExecuteNonQueryResult[]?> UpdateAsync([FromBody]HistoryData historyData)
         {
             string tableNameMD5 =
                 TDengineSuperTable.GetTableName(historyData.UnitId, historyData.Alias)
                     .CreateMD5();
             string table = $"t{tableNameMD5}";
             string sql =$"INSERT INTO {table} USING HistoryData TAGS({historyData.UnitId}, '{historyData.Alias}') VALUES ('{historyData.RecordTime.ToString("yyyy-MM-dd HH:mm:ss")}', {historyData.Value}, '{historyData.SoftDelete.ToString().ToLower()}')";
-            TDengineExecuteNonQueryResult? result = await _tDengineQuery.QueryAsync<TDengineExecuteNonQueryResult>(sql, new List<TDengineParameter>()
+            TDengineExecuteNonQueryResult[]? result = await _tDengineQuery.QueryAsync<TDengineExecuteNonQueryResult[]>(sql, new List<TDengineParameter>()
             {
                 new TDengineParameter()
                 {
@@ -129,14 +129,14 @@ namespace TDengineAspCoreClient.Controllers
         }
 
         [HttpPost("Delete")]
-        public async Task<TDengineExecuteNonQueryResult?> DeleteAsync([FromBody] HistoryData historyData)
+        public async Task<TDengineExecuteNonQueryResult[]?> DeleteAsync([FromBody] HistoryData historyData)
         {
             string tableNameMD5 =
                 TDengineSuperTable.GetTableName(historyData.UnitId, historyData.Alias)
                     .CreateMD5();
             string table = $"t{tableNameMD5}";
             string sql = $"DELETE FROM {table} WHERE recordtime = @recordtime";
-            TDengineExecuteNonQueryResult? result = await _tDengineQuery.QueryAsync<TDengineExecuteNonQueryResult>(sql, new List<TDengineParameter>()
+            TDengineExecuteNonQueryResult[]? result = await _tDengineQuery.QueryAsync<TDengineExecuteNonQueryResult[]>(sql, new List<TDengineParameter>()
             {
                 new TDengineParameter()
                 {

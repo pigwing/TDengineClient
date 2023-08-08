@@ -10,8 +10,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTDengineWebClient(connectionConfiguration =>
 {
-    connectionConfiguration.Host = "http://192.168.1.18:6041";
-    connectionConfiguration.Database = "eco_pro_predict";
+    connectionConfiguration.Host = "http://192.168.1.18:6341";
+    connectionConfiguration.Database = "iotplatform";
 }, new List<ConnectionConfiguration>()
 {
     new ConnectionConfiguration()
