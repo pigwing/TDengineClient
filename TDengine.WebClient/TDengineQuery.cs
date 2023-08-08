@@ -157,6 +157,8 @@ namespace TDengine.WebClient
             return GetResult(tdDengineResponse, jsonTypeInfo);
         }
 
+
+
         private string SqlGenerator(string rawSql, ICollection<TDengineParameter> parameters)
         {
             string sql = rawSql;
