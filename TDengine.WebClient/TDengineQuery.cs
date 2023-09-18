@@ -113,7 +113,7 @@ namespace TDengine.WebClient
             if (tdDengineResponse.Rows >= 1)
                 writer.Append("]");
 
-            var jsonString = writer.ToString();
+            var jsonString = writer.AsSpan();
             //Debug.Print(jsonString.ToString());
             return jsonString;
         }
