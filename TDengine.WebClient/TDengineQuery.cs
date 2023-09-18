@@ -1,5 +1,6 @@
-﻿using System.Collections;
-using DotNext.Buffers;
+﻿using System.Buffers;
+using Cysharp.Text;
+using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -34,25 +35,25 @@ namespace TDengine.WebClient
 
         private ReadOnlySpan<char> ConvertToJsonString(TDengineResponse tdDengineResponse)
         {
-            using var writer = new BufferWriterSlim<char>();
+            using var writer = ZString.CreateStringBuilder(true);
 
             if (tdDengineResponse.Rows >= 1)
-                writer.Write("[");
+                writer.Append("[");
 
 
             for (int j = 0; j < tdDengineResponse.Data!.Count; j++)
             {
                 object[] row = tdDengineResponse.Data[j];
-                writer.Write("{");
+                writer.Append("{");
                 for (int i = 0; i < tdDengineResponse.ColumnTDengineMeta!.Count; i++)
                 {
                     string jsonName = tdDengineResponse.ColumnTDengineMeta[i].Name!;
                     TDengineDataType tDengineDataType = tdDengineResponse.ColumnTDengineMeta[i].DataType;
                     object targetValue = row[i];
-                    writer.Write(@"""");
-                    writer.Write(jsonName);
-                    writer.Write(@"""");
-                    writer.Write(":");
+                    writer.Append(@"""");
+                    writer.Append(jsonName);
+                    writer.Append(@"""");
+                    writer.Append(":");
 
                     switch (tDengineDataType)
                     {
@@ -61,23 +62,23 @@ namespace TDengine.WebClient
                             DateTime.TryParse(targetValue.ToString(), out DateTime utcDateTime);
                             DateTime localTime = utcDateTime.ToLocalTime();
 
-                            writer.Write(@"""");
-                            writer.Write(localTime.ToString(DateTimeSystemTextJsonFormat)); 
-                            writer.Write(@"""");
+                            writer.Append(@"""");
+                            writer.Append(localTime.ToString(DateTimeSystemTextJsonFormat)); 
+                            writer.Append(@"""");
                         }
                             break;
                         case TDengineDataType.Binary:
                         case TDengineDataType.NChart:
                         case TDengineDataType.VarChar:
                         {
-                            writer.Write(@"""");
-                            writer.Write(targetValue == null ? "" : targetValue.ToString()); 
-                            writer.Write(@"""");
+                            writer.Append(@"""");
+                            writer.Append(targetValue == null ? "" : targetValue.ToString()); 
+                            writer.Append(@"""");
                         }
                             break;
                         case TDengineDataType.Bool:
                         {
-                            writer.Write(targetValue == null ? "false" : targetValue.ToString()!.ToLower());
+                            writer.Append(targetValue == null ? "false" : targetValue.ToString()!.ToLower());
                         }
                             break;
                         case TDengineDataType.BigInt:
@@ -91,28 +92,28 @@ namespace TDengine.WebClient
                         case TDengineDataType.TinyInt:
                         case TDengineDataType.TinyIntUnsigned:
                         {
-                            writer.Write(targetValue == null ? "0" : targetValue.ToString());
+                            writer.Append(targetValue == null ? "0" : targetValue.ToString());
                         }
                             break;
                         default:
-                            writer.Write(targetValue == null ? "null" : targetValue.ToString());
+                            writer.Append(targetValue == null ? "null" : targetValue.ToString());
                             break;
                     }
 
                     if (i != tdDengineResponse.ColumnTDengineMeta!.Count - 1)
-                        writer.Write(",");
+                        writer.Append(",");
                 }
 
-                writer.Write("}");
+                writer.Append("}");
 
                 if (j != tdDengineResponse.Data!.Count - 1)
-                    writer.Write(",");
+                    writer.Append(",");
             }
 
             if (tdDengineResponse.Rows >= 1)
-                writer.Write("]");
+                writer.Append("]");
 
-            var jsonString = writer.WrittenSpan;
+            var jsonString = writer.ToString();
             //Debug.Print(jsonString.ToString());
             return jsonString;
         }
