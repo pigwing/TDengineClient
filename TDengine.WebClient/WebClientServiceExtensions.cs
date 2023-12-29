@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Text;
+using Refit;
 
 namespace TDengine.WebClient
 {
@@ -10,18 +11,15 @@ namespace TDengine.WebClient
         {
             ConnectionConfiguration configuration = new ConnectionConfiguration();
             services.AddSingleton(configuration);
+            services.AddTransient<AuthHeaderHandler>();
             action(configuration);
             if (string.IsNullOrEmpty(configuration.Database))
                 throw new InvalidOperationException("Database is null");
-            services.AddHttpApi<ITDengineRestApi>(option =>
+
+            services.AddRefitClient<ITDengineRestApi>().ConfigureHttpClient(httpClient =>
             {
-                option.HttpHost = new Uri(configuration.Host ?? throw new InvalidOperationException("Host is null"));
-            }).ConfigureHttpClient(httpClient =>
-            {
-                string auth = $"{configuration.Username}:{configuration.Password}";
-                auth = $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes(auth))}";
-                httpClient.DefaultRequestHeaders.Add("Authorization", auth);
-            });
+                httpClient.BaseAddress = new Uri(configuration.Host ?? throw new InvalidOperationException("Host is null"));
+            }).AddHttpMessageHandler<AuthHeaderHandler>();
 
             if (connectionConfigurations is { Count: > 0 })
             {
@@ -37,6 +35,8 @@ namespace TDengine.WebClient
 
                 services.AddSingleton(connectionConfigurationDic);
             }
+
+            services.AddHttpClient<ITDengineHostRestApi>("__default__").AddHttpMessageHandler<AuthHeaderHandler>();
 
             services.AddTransient<TDengineQuery>();
             return services;

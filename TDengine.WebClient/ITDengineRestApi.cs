@@ -1,5 +1,4 @@
-﻿using TDengine.WebClient.Attribute;
-using WebApiClientCore.Attributes;
+﻿using Refit;
 
 namespace TDengine.WebClient
 {
@@ -7,15 +6,18 @@ namespace TDengine.WebClient
     //[LoggingFilter]
     public interface ITDengineRestApi
     {
-        [HttpPost("rest/sql/{database}")]
-        [JsonReturn]
-        [DynamicHost]
-        public Task<TDengineResponse> ExecuteQueryAsync([Uri] string host, string database, [RawStringContent("txt/plain")] string sql);
-        [HttpPost("rest/sql/{database}")]
-        [JsonReturn]
-        public Task<TDengineResponse> ExecuteQueryAsync(string database, [RawStringContent("txt/plain")] string sql);
-        [HttpPost("rest/sql")]
-        [JsonReturn]
-        public Task<TDengineResponse> ExecuteQueryAsync([RawStringContent("txt/plain")] string sql);
+        [Headers("Content-Type: txt/plain")]
+        [Post("/rest/sql/{database}")]
+        public Task<TDengineResponse> ExecuteQueryAsync(string database, [Body] string sql);
+        [Headers("Content-Type: txt/plain")]
+        [Post("/rest/sql")]
+        public Task<TDengineResponse> ExecuteQueryAsync([Body] string sql);
+    }
+
+    public interface ITDengineHostRestApi
+    {
+        [Headers("Content-Type: txt/plain")]
+        [Post("/rest/sql/{database}")]
+        public Task<TDengineResponse> ExecuteQueryAsync(string host, string database, [Body] string sql);
     }
 }

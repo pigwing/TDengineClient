@@ -3,6 +3,7 @@ using Cysharp.Text;
 using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Refit;
 
 namespace TDengine.WebClient
 {
@@ -10,16 +11,18 @@ namespace TDengine.WebClient
     {
         private readonly ITDengineRestApi _tDengineRestApi;
         private readonly ConnectionConfiguration _connectionConfiguration;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
         private const string DateTimeSystemTextJsonFormat = "yyyy-MM-ddTHH:mm:ss";
-        private readonly System.Text.Json.JsonSerializerOptions _jsonSerializerOptions;
+        private readonly JsonSerializerOptions _jsonSerializerOptions;
 
 
-        public TDengineQuery(ITDengineRestApi tDengineRestApi, ConnectionConfiguration connectionConfiguration)
+        public TDengineQuery(ITDengineRestApi tDengineRestApi, ConnectionConfiguration connectionConfiguration, IHttpClientFactory httpClientFactory)
         {
             _tDengineRestApi = tDengineRestApi;
             _connectionConfiguration = connectionConfiguration;
+            _httpClientFactory = httpClientFactory;
             _jsonSerializerOptions = new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true,
@@ -122,9 +125,9 @@ namespace TDengine.WebClient
         {
             if (jsonTypeInfo != null)
             {
-                return System.Text.Json.JsonSerializer.Deserialize<T>(jsonString, jsonTypeInfo);
+                return JsonSerializer.Deserialize<T>(jsonString, jsonTypeInfo);
             }
-            return System.Text.Json.JsonSerializer.Deserialize<T>(jsonString, _jsonSerializerOptions);
+            return JsonSerializer.Deserialize<T>(jsonString, _jsonSerializerOptions);
         }
 
         private T? GetResult<T>(TDengineResponse tdDengineResponse, JsonTypeInfo<T>? jsonTypeInfo = null)
@@ -152,8 +155,12 @@ namespace TDengine.WebClient
 
         public async Task<T?> QueryAsync<T>(string host, string database, string sql, JsonTypeInfo<T>? jsonTypeInfo = null) where T : IEnumerable
         {
+            HttpClient httpClient = _httpClientFactory.CreateClient("__default__");
+            httpClient.BaseAddress = new Uri(host);
+
+            ITDengineHostRestApi hostRestApi = RestService.For<ITDengineHostRestApi>(httpClient);
             TDengineResponse tdDengineResponse =
-                await _tDengineRestApi.ExecuteQueryAsync(host, database, sql);
+                await hostRestApi.ExecuteQueryAsync(host, database, sql);
 
             return GetResult(tdDengineResponse, jsonTypeInfo);
         }
