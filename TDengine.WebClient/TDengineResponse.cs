@@ -1,4 +1,6 @@
-﻿namespace TDengine.WebClient
+﻿using System.Text;
+
+namespace TDengine.WebClient
 {
     public class TDengineResponse : BaseResponse
     {
@@ -17,7 +19,7 @@
                 List<TDengineMeta> list = new List<TDengineMeta>();
                 foreach (object[] objects in ColumnMeta)
                 {
-                    string dataType = objects[1].ToString()!;
+                    string dataType = RemoveWhitespacesUsingLinq(objects[1].ToString()!);
                     int.TryParse(objects[2].ToString()!, out int length);
                     Enum.TryParse(dataType, true, out TDengineDataType tdDengineDataType);
                     list.Add(new TDengineMeta()
@@ -30,5 +32,11 @@
                 return list;
             }
         }
+
+        private string RemoveWhitespacesUsingLinq(string source)
+        {
+            return new string(source.Where(c => !char.IsWhiteSpace(c)).ToArray());
+        }
     }
+    
 }
